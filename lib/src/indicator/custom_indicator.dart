@@ -5,6 +5,7 @@
  */
 
 import 'package:flutter/widgets.dart';
+
 import '../internals/indicator_wrap.dart';
 import '../smart_refresher.dart';
 
@@ -73,11 +74,7 @@ class CustomHeader extends RefreshIndicator {
     double height: 60.0,
     Duration completeDuration: const Duration(milliseconds: 600),
     RefreshStyle refreshStyle: RefreshStyle.Follow,
-  }) : super(
-            key: key,
-            completeDuration: completeDuration,
-            refreshStyle: refreshStyle,
-            height: height);
+  }) : super(key: key, completeDuration: completeDuration, refreshStyle: refreshStyle, height: height);
 
   @override
   State<StatefulWidget> createState() {
@@ -155,11 +152,7 @@ class CustomFooter extends LoadIndicator {
     LoadStyle loadStyle: LoadStyle.ShowAlways,
     required this.builder,
     Function? onClick,
-  }) : super(
-            key: key,
-            onClick: onClick as void Function()?,
-            loadStyle: loadStyle,
-            height: height);
+  }) : super(key: key, onClick: onClick as void Function()?, loadStyle: loadStyle, height: height);
 
   @override
   State<StatefulWidget> createState() {

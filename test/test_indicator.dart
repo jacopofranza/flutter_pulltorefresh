@@ -4,12 +4,12 @@
     createTime: 2019-07-20 20:58
  */
 
+import 'package:flutter/material.dart' hide RefreshIndicatorState, RefreshIndicator;
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:flutter/material.dart'
-    hide RefreshIndicatorState, RefreshIndicator;
 
 class TestHeader extends RefreshIndicator {
   const TestHeader();
+
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
@@ -43,6 +43,7 @@ class _TestHeaderState extends RefreshIndicatorState<TestHeader> {
 
 class TestFooter extends LoadIndicator {
   const TestFooter();
+
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
