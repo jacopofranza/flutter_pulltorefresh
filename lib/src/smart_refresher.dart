@@ -590,7 +590,7 @@ class RefreshController {
   }
 
   /// make the header enter refreshing state,and callback onRefresh
-  Future<void>? requestRefresh({bool needMove: true, bool needCallback: true, Duration duration: const Duration(milliseconds: 500), Curve curve: Curves.linear}) {
+  Future<void>? requestRefresh({bool needMove: true, bool needCallback: true, Duration duration: const Duration(milliseconds: 300), Curve curve: Curves.linear}) {
     assert(position != null, 'Try not to call requestRefresh() before build,please call after the ui was rendered');
     if (isRefresh) return Future.value();
     StatefulElement? indicatorElement = _findIndicator(position!.context.storageContext, RefreshIndicator);
@@ -623,7 +623,7 @@ class RefreshController {
   }
 
   /// make the header enter refreshing state,and callback onRefresh
-  Future<void> requestTwoLevel({Duration duration: const Duration(milliseconds: 300), Curve curve: Curves.linear}) {
+  Future<void> requestTwoLevel({Duration duration: const Duration(milliseconds: 200), Curve curve: Curves.linear}) {
     assert(position != null, 'Try not to call requestRefresh() before build,please call after the ui was rendered');
     headerMode!.value = RefreshStatus.twoLevelOpening;
     return Future.delayed(const Duration(milliseconds: 50)).then((_) async {
@@ -632,7 +632,7 @@ class RefreshController {
   }
 
   /// make the footer enter loading state,and callback onLoading
-  Future<void>? requestLoading({bool needMove: true, bool needCallback: true, Duration duration: const Duration(milliseconds: 300), Curve curve: Curves.linear}) {
+  Future<void>? requestLoading({bool needMove: true, bool needCallback: true, Duration duration: const Duration(milliseconds: 200), Curve curve: Curves.linear}) {
     assert(position != null, 'Try not to call requestLoading() before build,please call after the ui was rendered');
     if (isLoading) return Future.value();
     StatefulElement? indicatorElement = _findIndicator(position!.context.storageContext, LoadIndicator);
@@ -672,7 +672,7 @@ class RefreshController {
   }
 
   /// end twoLeveling,will return back first floor
-  Future<void>? twoLevelComplete({Duration duration: const Duration(milliseconds: 500), Curve curve: Curves.linear}) {
+  Future<void>? twoLevelComplete({Duration duration: const Duration(milliseconds: 300), Curve curve: Curves.linear}) {
     headerMode?.value = RefreshStatus.twoLevelClosing;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       position!.animateTo(0.0, duration: duration, curve: curve).whenComplete(() {
