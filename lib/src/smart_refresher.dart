@@ -99,6 +99,20 @@ enum LoadStyle {
   ShowWhenLoading
 }
 
+class _NoOverscrollIndicatorBehavior extends ScrollBehavior {
+  const _NoOverscrollIndicatorBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    // Remove stretch/glow overscroll indicator.
+    return child;
+  }
+}
+
 /// This is the most important component that provides drop-down refresh and up loading.
 /// [RefreshController] must not be null,Only one controller to one SmartRefresher
 ///
@@ -280,6 +294,9 @@ class SmartRefresherState extends State<SmartRefresher> {
 
   final LoadIndicator defaultFooter = ClassicFooter();
 
+  // Always allow pull-to-refresh even when content is short, but avoid bounce.
+  ScrollPhysics _defaultBasePhysics() => const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics());
+
   //build slivers from child Widget
   List<Widget>? _buildSliversByChild(BuildContext context, Widget? child, RefreshConfiguration? configuration) {
     List<Widget>? slivers;
@@ -313,16 +330,26 @@ class SmartRefresherState extends State<SmartRefresher> {
     return slivers;
   }
 
+  // --- PATCH: detect bouncing only from the actual physics chain (not from ScrollConfiguration) ---
+  bool _isBouncingChain(ScrollPhysics p) {
+    // Detect bouncing only if the actual physics chain contains BouncingScrollPhysics.
+    ScrollPhysics? cur = p;
+    while (cur != null) {
+      if (cur is BouncingScrollPhysics) return true;
+      cur = cur.parent;
+    }
+    return false;
+  }
+
   ScrollPhysics _getScrollPhysics(RefreshConfiguration? conf, ScrollPhysics physics) {
-    final bool isBouncingPhysics = physics is BouncingScrollPhysics ||
-        (physics is AlwaysScrollableScrollPhysics && ScrollConfiguration.of(context).getScrollPhysics(context).runtimeType == BouncingScrollPhysics);
+    final bool isBouncingPhysics = _isBouncingChain(physics);
     return _physics = RefreshPhysics(
             dragSpeedRatio: conf?.dragSpeedRatio ?? 1,
             springDescription: conf?.springDescription ??
                 const SpringDescription(
-                  mass: 2.2,
-                  stiffness: 150,
-                  damping: 16,
+                  mass: 0.9,
+                  stiffness: 900,
+                  damping: 45,
                 ),
             controller: widget.controller,
             enableScrollWhenTwoLevel: conf?.enableScrollWhenTwoLevel ?? true,
@@ -385,14 +412,14 @@ class SmartRefresherState extends State<SmartRefresher> {
         anchor: anchor ?? 0.0,
         restorationId: restorationId,
         center: center,
-        physics: _getScrollPhysics(conf, physics ?? AlwaysScrollableScrollPhysics()),
+        physics: _getScrollPhysics(conf, physics ?? _defaultBasePhysics()),
         slivers: slivers!,
         dragStartBehavior: dragStartBehavior ?? DragStartBehavior.start,
         reverse: reverse ?? false,
       );
     } else {
       body = Scrollable(
-        physics: _getScrollPhysics(conf, childView.physics ?? AlwaysScrollableScrollPhysics()),
+        physics: _getScrollPhysics(conf, childView.physics ?? _defaultBasePhysics()),
         controller: childView.controller,
         axisDirection: childView.axisDirection,
         semanticChildCount: childView.semanticChildCount,
@@ -485,7 +512,7 @@ class SmartRefresherState extends State<SmartRefresher> {
     final RefreshConfiguration? configuration = RefreshConfiguration.of(context);
     Widget? body;
     if (widget.builder != null)
-      body = widget.builder!(context, _getScrollPhysics(configuration, AlwaysScrollableScrollPhysics()) as RefreshPhysics);
+      body = widget.builder!(context, _getScrollPhysics(configuration, _defaultBasePhysics()) as RefreshPhysics);
     else {
       List<Widget>? slivers = _buildSliversByChild(context, widget.child, configuration);
       body = _buildBodyBySlivers(widget.child, slivers, configuration);
@@ -493,11 +520,14 @@ class SmartRefresherState extends State<SmartRefresher> {
     if (configuration == null) {
       body = RefreshConfiguration(child: body!);
     }
-    return LayoutBuilder(
-      builder: (c2, cons) {
-        viewportExtent = cons.biggest.height;
-        return body!;
-      },
+    return ScrollConfiguration(
+      behavior: const _NoOverscrollIndicatorBehavior(),
+      child: LayoutBuilder(
+        builder: (c2, cons) {
+          viewportExtent = cons.biggest.height;
+          return body!;
+        },
+      ),
     );
   }
 }
@@ -821,9 +851,9 @@ class RefreshConfiguration extends InheritedWidget {
       this.enableLoadingWhenNoData: false,
       this.enableBallisticRefresh: false,
       this.springDescription: const SpringDescription(
-        mass: 2.2,
-        stiffness: 150,
-        damping: 16,
+        mass: 0.9,
+        stiffness: 900,
+        damping: 45,
       ),
       this.enableScrollWhenRefreshCompleted: false,
       this.enableLoadingWhenFailed: true,
